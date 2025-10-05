@@ -24,8 +24,8 @@ llm_services:
 
   multimodal:
     provider: local_llava
-    model_path: /home/yopla/Documents/llm_models/python/models/multimodal/llava-v1.5-13b-Q6_K.gguf
-    clip_path: /home/yopla/Documents/llm_models/python/models/multimodal/mmproj-model-f16.gguf
+    model_path: /home/yopla/montage_models/llm_models/python/models/multimodal/llava-v1.5-13b-Q6_K.gguf
+    clip_path: /home/yopla/montage_models/llm_models/python/models/multimodal/mmproj-model-f16.gguf
 
 # Configuration des providers
 providers:

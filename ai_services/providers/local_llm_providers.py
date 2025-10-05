@@ -16,7 +16,7 @@ class LocalDeepSeekProvider:
         from .utils import clear_vram_if_possible
         clear_vram_if_possible()
 
-        from local_deepseek import LocalDeepSeek_R1_Provider
+        from ai_services.providers.local_deepseek import LocalDeepSeek_R1_Provider
 
         self.provider = LocalDeepSeek_R1_Provider(
             model=model_path,
@@ -69,11 +69,10 @@ class LocalLLaVAProvider:
     """Wrapper production-ready pour votre LocalMultimodalProvider."""
 
     def __init__(self, config: dict, model_path: str, clip_path: str):
-        from providers.utils import clear_vram_if_possible
+        from ai_services.providers.utils import clear_vram_if_possible
         clear_vram_if_possible()
 
-        # NOTE: This will fail unless the user has this module in their PYTHONPATH
-        from your_llm_module import LocalMultimodalProvider
+        from ai_services.providers.local_deepseek import LocalMultimodalProvider
 
         self.provider = LocalMultimodalProvider(
             model=model_path,
