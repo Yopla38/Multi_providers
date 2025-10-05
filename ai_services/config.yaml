@@ -13,7 +13,7 @@
 # ------------------------------------------------------------------------------
 services:
   # --- Services ComfyUI ---
-  image_generation_comfy:
+  image_generation:
     provider: comfyui
     workflow: "flux_cinemat.json"
     node_mapping:
