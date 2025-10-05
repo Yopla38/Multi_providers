@@ -1,963 +1,848 @@
-# 🎯 Bibliothèque Complète de Services AI
+# 📦 Checklist pour Transformer en Bibliothèque Python
 
-Voici une architecture **production-ready** qui unifie tout :
+Voici **tout ce qu'il reste à faire** pour en faire une vraie bibliothèque professionnelle :
 
-## 📁 Structure
+---
+
+## 1. 🏗️ Structure du Package
 
 ```
-services/
-├── __init__.py
-├── config.yaml                 # Configuration des services
-├── secrets.env                 # Clés API (gitignored)
-├── media_manager.py           # Gestion images/vidéos
-├── llm_manager.py             # Gestion LLM/texte
-└── providers/
-    ├── __init__.py
-    ├── comfyui_providers.py   # Wrapper ComfyUI
-    ├── replicate_providers.py # Wrapper Replicate
-    ├── local_llm_providers.py # DeepSeek + LLaVA
-    └── utils.py               # Fonctions communes
+ai-services-lib/
+├── pyproject.toml              # ⭐ À CRÉER - Configuration moderne
+├── setup.py                    # ⭐ À CRÉER - Installation
+├── setup.cfg                   # ⭐ À CRÉER - Métadonnées
+├── MANIFEST.in                 # ⭐ À CRÉER - Fichiers à inclure
+├── README.md                   # ⭐ À CRÉER - Documentation principale
+├── LICENSE                     # ⭐ À CRÉER - Licence (MIT recommandé)
+├── CHANGELOG.md                # ⭐ À CRÉER - Historique des versions
+├── requirements.txt            # ⭐ À CRÉER - Dépendances
+├── requirements-dev.txt        # ⭐ À CRÉER - Dépendances dev
+├── .gitignore                  # ⭐ À CRÉER
+├── .github/                    # ⭐ À CRÉER - CI/CD
+│   └── workflows/
+│       └── tests.yml
+│
+├── ai_services/               # ⭐ RENOMMER services/ en ai_services/
+│   ├── __init__.py           # ⭐ À AMÉLIORER - Version, exports
+│   ├── __version__.py        # ⭐ À CRÉER
+│   ├── config.yaml           # ✅ Existe
+│   ├── exceptions.py         # ⭐ À CRÉER - Exceptions custom
+│   ├── logging_config.py     # ⭐ À CRÉER - Config logging
+│   ├── validators.py         # ⭐ À CRÉER - Validation config
+│   ├── media_manager.py      # ✅ Existe
+│   ├── llm_manager.py        # ✅ Existe
+│   │
+│   ├── providers/
+│   │   ├── __init__.py
+│   │   ├── base.py           # ⭐ À CRÉER - Classes abstraites
+│   │   ├── utils.py          # ✅ Existe
+│   │   ├── comfyui_providers.py    # ✅ Existe
+│   │   ├── replicate_providers.py  # ✅ Existe
+│   │   └── local_llm_providers.py  # ✅ Existe
+│   │
+│   └── cli/                  # ⭐ À CRÉER - Interface CLI
+│       ├── __init__.py
+│       └── main.py
+│
+├── tests/                     # ⭐ À CRÉER - Tests unitaires
+│   ├── __init__.py
+│   ├── conftest.py           # Fixtures pytest
+│   ├── test_media_manager.py
+│   ├── test_llm_manager.py
+│   ├── test_providers/
+│   │   ├── test_comfyui.py
+│   │   ├── test_replicate.py
+│   │   └── test_local_llm.py
+│   └── fixtures/
+│       └── test_images/
+│
+├── docs/                      # ⭐ À CRÉER - Documentation
+│   ├── conf.py               # Sphinx config
+│   ├── index.rst
+│   ├── quickstart.rst
+│   ├── api_reference.rst
+│   ├── providers.rst
+│   └── examples/
+│
+└── examples/                  # ⭐ À CRÉER - Exemples
+    ├── basic_usage.py
+    ├── advanced_workflow.py
+    ├── custom_provider.py
+    └── notebooks/
+        └── tutorial.ipynb
 ```
 
 ---
 
-## 1. **config.yaml** - Configuration Principale
+## 2. 📝 Fichiers Essentiels à Créer
 
-```yaml
-# Configuration des services média (images/vidéos)
-media_services:
-  image_generation:
-    provider: comfyui
-    workflow: flux_cinemat.json
-    
-  image_editing:
-    provider: comfyui
-    workflow: flux_kontext_master.json
-    
-  image_composition:
-    provider: comfyui
-    workflow: flux_kontext_master.json
-    
-  video_generation:
-    provider: comfyui
-    workflow: wan_video_22.json
+### **pyproject.toml** (Standard moderne)
 
-# Configuration des services LLM (texte)
-llm_services:
-  text_generation:
-    provider: local_deepseek
-    model_path: /home/yopla/montage_models/llm_models/python/models/txt2txt/DeepSeek-R1-Distill-Qwen-14B-Q5_K_S/DeepSeek-R1-Distill-Qwen-14B-Q5_K_S.gguf
-    
-  multimodal:
-    provider: local_llava
-    model_path: /home/yopla/Documents/llm_models/python/models/multimodal/llava-v1.5-13b-Q6_K.gguf
-    clip_path: /home/yopla/Documents/llm_models/python/models/multimodal/mmproj-model-f16.gguf
+```toml
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
-# Configuration des providers
-providers:
-  comfyui:
-    base_path: /home/yopla/Applications/SD/comfyui/ComfyUI/
-    url: http://127.0.0.1:8188
-    
-  replicate:
-    default_models:
-      image: bytedance/sdxl-lightning-4step
-      video: some-video-model
-      
-  local_deepseek:
-    n_ctx: 8192
-    temperature: 0.6
-    max_tokens: 8000
-    
-  local_llava:
-    n_ctx: 4096
-    temperature: 0.7
-    max_tokens: 2048
+[project]
+name = "ai-services-lib"
+version = "0.1.0"
+description = "Unified interface for AI services (ComfyUI, Replicate, Local LLMs)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Votre Nom", email = "votre@email.com"}
+]
+keywords = ["ai", "llm", "comfyui", "stable-diffusion", "replicate"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "tenacity>=8.0",
+    "requests>=2.31",
+    "torch>=2.0",
+    "pillow>=10.0",
+    "instructor>=0.5.0",
+    "llama-cpp-python>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.21",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "sphinx>=7.0",
+]
+
+replicate = [
+    "replicate>=0.20.0",
+]
+
+all = [
+    "ai-services-lib[replicate,dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/votre-nom/ai-services-lib"
+Documentation = "https://ai-services-lib.readthedocs.io"
+Repository = "https://github.com/votre-nom/ai-services-lib"
+Changelog = "https://github.com/votre-nom/ai-services-lib/blob/main/CHANGELOG.md"
+
+[project.scripts]
+ai-services = "ai_services.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ai_services*"]
+
+[tool.setuptools.package-data]
+ai_services = ["config.yaml", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=ai_services --cov-report=html --cov-report=term"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
 ```
 
 ---
 
-## 2. **secrets.env** - Clés API
-
-```bash
-# Replicate
-REPLICATE_API_TOKEN=r8_YOUR_TOKEN_HERE
-
-# OpenAI (optionnel)
-OPENAI_API_KEY=sk-YOUR_KEY_HERE
-
-# Autres services
-STABILITY_AI_KEY=sk-YOUR_KEY
-```
-
----
-
-## 3. **providers/utils.py** - Utilitaires Communs
+### **setup.py** (Pour compatibilité)
 
 ```python
 """
-Utilitaires communs pour tous les providers.
+Setup script for ai-services-lib.
+Uses pyproject.toml for configuration.
 """
-import subprocess
-import gc
-import torch
+from setuptools import setup
+
+if __name__ == "__main__":
+    setup()
+```
+
+---
+
+### **ai_services/__version__.py**
+
+```python
+"""Version information."""
+
+__version__ = "0.1.0"
+__author__ = "Votre Nom"
+__email__ = "votre@email.com"
+__license__ = "MIT"
+__description__ = "Unified interface for AI services"
+```
+
+---
+
+### **ai_services/__init__.py** (Amélioré)
+
+```python
+"""
+AI Services Library
+~~~~~~~~~~~~~~~~~~~
+
+Unified interface for AI services (ComfyUI, Replicate, Local LLMs).
+
+Basic usage:
+    >>> from ai_services import media, llm
+    >>> media.generate_image("A cat", "output.png")
+    >>> llm.generate_text("Hello world")
+
+:copyright: (c) 2024 by Votre Nom.
+:license: MIT, see LICENSE for more details.
+"""
+
+from .__version__ import __version__, __author__, __email__
+from .media_manager import MediaManager, media
+from .llm_manager import LLMManager, llm
+from .exceptions import (
+    AIServicesError,
+    ProviderError,
+    ConfigurationError,
+    GenerationError,
+)
+
+__all__ = [
+    # Version info
+    "__version__",
+    "__author__",
+    "__email__",
+    
+    # Main interfaces
+    "media",
+    "llm",
+    "MediaManager",
+    "LLMManager",
+    
+    # Exceptions
+    "AIServicesError",
+    "ProviderError",
+    "ConfigurationError",
+    "GenerationError",
+]
+
+# Configure logging
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+```
+
+---
+
+### **ai_services/exceptions.py**
+
+```python
+"""
+Custom exceptions for ai-services-lib.
+"""
+
+
+class AIServicesError(Exception):
+    """Base exception for all ai-services errors."""
+    pass
+
+
+class ProviderError(AIServicesError):
+    """Error related to a specific provider."""
+    
+    def __init__(self, provider: str, message: str):
+        self.provider = provider
+        self.message = message
+        super().__init__(f"[{provider}] {message}")
+
+
+class ConfigurationError(AIServicesError):
+    """Error in configuration (YAML or secrets)."""
+    pass
+
+
+class GenerationError(AIServicesError):
+    """Error during generation (image, video, text)."""
+    
+    def __init__(self, service: str, message: str, original_error: Exception = None):
+        self.service = service
+        self.original_error = original_error
+        super().__init__(f"Generation failed in {service}: {message}")
+
+
+class ModelNotFoundError(AIServicesError):
+    """Model file not found."""
+    pass
+
+
+class ValidationError(AIServicesError):
+    """Configuration validation failed."""
+    pass
+```
+
+---
+
+### **ai_services/validators.py**
+
+```python
+"""
+Configuration validators.
+"""
+from pathlib import Path
+from typing import Dict, Any
+from .exceptions import ValidationError, ConfigurationError
+
+
+def validate_config(config: Dict[str, Any]) -> None:
+    """
+    Validate configuration structure.
+    
+    Raises:
+        ValidationError: If configuration is invalid
+    """
+    # Check required sections
+    required_sections = ["media_services", "llm_services", "providers"]
+    for section in required_sections:
+        if section not in config:
+            raise ValidationError(f"Missing required section: {section}")
+    
+    # Validate provider references
+    providers = config["providers"].keys()
+    
+    for service_type, services in config["media_services"].items():
+        provider = services.get("provider")
+        if provider not in providers:
+            raise ValidationError(
+                f"Unknown provider '{provider}' in media_services.{service_type}"
+            )
+    
+    for service_type, services in config["llm_services"].items():
+        provider = services.get("provider")
+        if provider not in providers:
+            raise ValidationError(
+                f"Unknown provider '{provider}' in llm_services.{service_type}"
+            )
+
+
+def validate_paths(config: Dict[str, Any]) -> None:
+    """
+    Validate that required paths exist.
+    
+    Raises:
+        ConfigurationError: If required paths don't exist
+    """
+    # ComfyUI paths
+    if "comfyui" in config.get("providers", {}):
+        base_path = config["providers"]["comfyui"].get("base_path")
+        if base_path and not Path(base_path).exists():
+            raise ConfigurationError(
+                f"ComfyUI base path does not exist: {base_path}"
+            )
+    
+    # Local LLM model paths
+    for service_name, service_config in config.get("llm_services", {}).items():
+        if "model_path" in service_config:
+            model_path = service_config["model_path"]
+            if not Path(model_path).exists():
+                raise ConfigurationError(
+                    f"Model not found for {service_name}: {model_path}"
+                )
+```
+
+---
+
+### **ai_services/logging_config.py**
+
+```python
+"""
+Logging configuration.
+"""
+import logging
+import sys
+from pathlib import Path
 from typing import Optional
 
 
-def clear_vram_if_possible():
-    """Libère la VRAM PyTorch."""
-    try:
-        gc.collect()
-        if torch.cuda.is_available():
-            print("🧹 Nettoyage de la VRAM...")
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
-            print("✅ VRAM nettoyée.")
-    except ImportError:
-        pass
-    except Exception as e:
-        print(f"⚠️ Échec du nettoyage VRAM : {e}")
-
-
-def get_optimal_n_gpu_layers(default: int = 0) -> int:
-    """Détermine le nombre optimal de couches GPU."""
-    try:
-        output = subprocess.check_output(
-            ['nvidia-smi', '--query-gpu=memory.free', '--format=csv,nounits,noheader']
-        )
-        free_memory = int(output.decode('utf-8').split('\n')[0].strip())
-
-        if free_memory >= 16000:
-            return 35
-        elif free_memory >= 8000:
-            return 20
-        elif free_memory >= 4000:
-            return 12
-        else:
-            return 6
-    except Exception as e:
-        print(f"⚠️ Aucun GPU détecté : {e}")
-        return default
-
-
-def load_api_keys(secrets_path: str = "secrets.env") -> dict:
-    """Charge les clés API depuis un fichier .env."""
-    import os
-    from pathlib import Path
-    
-    keys = {}
-    secrets_file = Path(secrets_path)
-    
-    if not secrets_file.exists():
-        print(f"⚠️ Fichier {secrets_path} introuvable")
-        return keys
-    
-    with open(secrets_file, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                key, value = line.split('=', 1)
-                keys[key.strip()] = value.strip()
-    
-    return keys
-```
-
----
-
-## 4. **providers/comfyui_providers.py** - Wrapper ComfyUI
-
-```python
-"""
-Wrappers pour les services ComfyUI existants.
-Réutilise votre code sans modification.
-"""
-import os
-from typing import Optional, Dict
-from tenacity import retry, wait_exponential, stop_after_attempt
-
-
-class ComfyUIImageProvider:
-    """Wrapper pour vos executors ComfyUI existants."""
-    
-    def __init__(self, config: dict):
-        self.config = config
-        # Import lazy pour éviter de charger si pas utilisé
-        self._executor = None
-    
-    @property
-    def executor(self):
-        if self._executor is None:
-            from comfy_image_executor import execute_image_workflow
-            self._executor = execute_image_workflow
-        return self._executor
-    
-    @retry(
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        stop=stop_after_attempt(3),
-        reraise=True
-    )
-    def generate(
-        self,
-        workflow_name: str,
-        output_path: str,
-        prompt: str,
-        input_image: Optional[str] = None,
-        loras: Optional[Dict[str, float]] = None,
-        **kwargs
-    ) -> bool:
-        """Génère une image via ComfyUI."""
-        print(f"🎨 ComfyUI - {workflow_name}")
-        
-        return self.executor(
-            workflow_name=workflow_name,
-            final_output_path=output_path,
-            prompt=prompt,
-            input_image=input_image,
-            loras=loras,
-            **kwargs
-        )
-
-
-class ComfyUIVideoProvider:
-    """Wrapper pour votre ComfyVideoExecutor."""
-    
-    def __init__(self, config: dict):
-        self.config = config
-        self._executor = None
-    
-    @property
-    def executor(self):
-        if self._executor is None:
-            from comfy_executor_video import ComfyVideoExecutor
-            self._executor = ComfyVideoExecutor()
-        return self._executor
-    
-    @retry(
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        stop=stop_after_attempt(3),
-        reraise=True
-    )
-    def generate(
-        self,
-        workflow_path: str,
-        prompt: str,
-        input_image: Optional[str] = None,
-        num_frames: int = 81,
-        continue_video: bool = False,
-        **kwargs
-    ) -> bool:
-        """Génère une vidéo via ComfyUI."""
-        print(f"🎬 ComfyUI Video - {num_frames} frames")
-        
-        return self.executor.execute_workflow(
-            workflow_path=workflow_path,
-            prompt=prompt,
-            input_image_path=input_image,
-            continue_video=continue_video,
-            num_frames=num_frames,
-            **kwargs
-        )
-```
-
----
-
-## 5. **providers/replicate_providers.py** - Wrapper Replicate
-
-```python
-"""
-Wrapper pour Replicate (réutilise votre ImageGenerator_replicate).
-"""
-from typing import Optional, Dict, List
-from tenacity import retry, wait_exponential, stop_after_attempt
-
-
-class ReplicateMediaProvider:
-    """Wrapper pour vos services Replicate existants."""
-    
-    def __init__(self, config: dict, api_token: str):
-        self.config = config
-        self._generator = None
-        self.api_token = api_token
-    
-    @property
-    def generator(self):
-        if self._generator is None:
-            from image_service import ImageGenerator_replicate
-            self._generator = ImageGenerator_replicate(
-                api_token=self.api_token,
-                max_workers=10
-            )
-        return self._generator
-    
-    @retry(
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        stop=stop_after_attempt(3),
-        reraise=True
-    )
-    def generate_image(
-        self,
-        prompt: str,
-        output_path: str,
-        model_id: Optional[str] = None,
-        input_image: Optional[str] = None,
-        loras: Optional[Dict[str, float]] = None,
-        **kwargs
-    ) -> bool:
-        """Génère une image via Replicate."""
-        print(f"🌐 Replicate - {model_id or 'default model'}")
-        
-        if not model_id:
-            model_id = self.config.get("default_models", {}).get("image")
-        
-        outputs = self.generator.generate_image(
-            prompt=prompt,
-            output_file=output_path,
-            model_id=model_id,
-            lora_model=loras,
-            **kwargs
-        )
-        
-        return len(outputs) > 0
-    
-    def __del__(self):
-        if self._generator:
-            self._generator.__exit__(None, None, None)
-```
-
----
-
-## 6. **providers/local_llm_providers.py** - LLM Locaux
-
-```python
-"""
-Providers LLM locaux (DeepSeek + LLaVA).
-Réutilise votre code existant avec retry production.
-"""
-from typing import Optional, List, Dict, Any, Union
-from pydantic import BaseModel
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
-import json
-import logging
-
-
-class LocalDeepSeekProvider:
-    """Wrapper production-ready pour votre LocalDeepSeek_R1_Provider."""
-    
-    def __init__(self, config: dict, model_path: str):
-        from providers.utils import clear_vram_if_possible
-        clear_vram_if_possible()
-        
-        # Import votre classe existante
-        # Note: Je suppose que votre code est dans un module accessible
-        from your_llm_module import LocalDeepSeek_R1_Provider
-        
-        self.provider = LocalDeepSeek_R1_Provider(
-            model=model_path,
-            system_prompt=config.get("system_prompt")
-        )
-        
-        self.config = config
-    
-    @retry(
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        stop=stop_after_attempt(3),
-        retry=retry_if_exception_type((ValueError, json.JSONDecodeError)),
-        reraise=True
-    )
-    async def generate(
-        self,
-        prompt: Union[str, List[Dict[str, str]]],
-        pydantic_model: Optional[BaseModel] = None,
-        **kwargs
-    ) -> Union[str, BaseModel]:
-        """Génère une réponse avec retry."""
-        print(f"🤖 DeepSeek R1 - {'Structuré' if pydantic_model else 'Texte'}")
-        
-        # Merge config avec kwargs
-        generation_params = {
-            "max_tokens": self.config.get("max_tokens", 8000),
-            "temperature": self.config.get("temperature", 0.6),
-            **kwargs
-        }
-        
-        return await self.provider.generate_response(
-            prompt=prompt,
-            pydantic_model=pydantic_model,
-            **generation_params
-        )
-    
-    def generate_sync(self, prompt, pydantic_model=None, **kwargs):
-        """Version synchrone."""
-        import asyncio
-        return asyncio.run(self.generate(prompt, pydantic_model, **kwargs))
-    
-    def set_system_prompt(self, system_prompt: str):
-        self.provider.set_system_prompt(system_prompt)
-    
-    def clear_history(self):
-        self.provider.history.clear()
-
-
-class LocalLLaVAProvider:
-    """Wrapper production-ready pour votre LocalMultimodalProvider."""
-    
-    def __init__(self, config: dict, model_path: str, clip_path: str):
-        from providers.utils import clear_vram_if_possible
-        clear_vram_if_possible()
-        
-        from your_llm_module import LocalMultimodalProvider
-        
-        self.provider = LocalMultimodalProvider(
-            model=model_path,
-            clip_model_path=clip_path,
-            system_prompt=config.get("system_prompt")
-        )
-        
-        self.config = config
-    
-    @retry(
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        stop=stop_after_attempt(3),
-        reraise=True
-    )
-    async def generate(
-        self,
-        prompt: str,
-        image_path: Optional[str] = None,
-        stream: bool = False,
-        **kwargs
-    ) -> str:
-        """Génère une réponse multimodale avec retry."""
-        print(f"👁️ LLaVA - {'Avec image' if image_path else 'Texte seul'}")
-        
-        generation_params = {
-            "max_tokens": self.config.get("max_tokens", 2048),
-            "temperature": self.config.get("temperature", 0.7),
-            **kwargs
-        }
-        
-        return await self.provider.generate_response(
-            prompt=prompt,
-            image_path=image_path,
-            stream=stream,
-            **generation_params
-        )
-    
-    def generate_sync(self, prompt, image_path=None, **kwargs):
-        """Version synchrone."""
-        import asyncio
-        return asyncio.run(self.generate(prompt, image_path, **kwargs))
-    
-    def clear_history(self):
-        self.provider.history.clear()
-```
-
----
-
-## 7. **media_manager.py** - Gestionnaire Images/Vidéos
-
-```python
-"""
-Gestionnaire unifié pour les services média (images/vidéos).
-"""
-import yaml
-import os
-from pathlib import Path
-from typing import Optional, Dict, List
-from providers.utils import load_api_keys
-
-
-class MediaManager:
+def setup_logging(
+    level: str = "INFO",
+    log_file: Optional[str] = None,
+    format_string: Optional[str] = None
+) -> None:
     """
-    Gestionnaire unique pour images et vidéos.
-    Route automatiquement vers le bon provider.
+    Configure logging for the library.
+    
+    Args:
+        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        log_file: Optional log file path
+        format_string: Custom format string
     """
-    
-    def __init__(
-        self,
-        config_path: str = "services/config.yaml",
-        secrets_path: str = "services/secrets.env"
-    ):
-        # Charger configuration
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
-        
-        # Charger clés API
-        self.api_keys = load_api_keys(secrets_path)
-        
-        # Lazy loading des providers
-        self._providers = {}
-    
-    def _get_provider(self, provider_name: str):
-        """Charge un provider à la demande."""
-        if provider_name in self._providers:
-            return self._providers[provider_name]
-        
-        provider_config = self.config["providers"].get(provider_name, {})
-        
-        if provider_name == "comfyui":
-            from providers.comfyui_providers import ComfyUIImageProvider, ComfyUIVideoProvider
-            self._providers["comfyui"] = {
-                "image": ComfyUIImageProvider(provider_config),
-                "video": ComfyUIVideoProvider(provider_config)
-            }
-        
-        elif provider_name == "replicate":
-            from providers.replicate_providers import ReplicateMediaProvider
-            api_token = self.api_keys.get("REPLICATE_API_TOKEN")
-            if not api_token:
-                raise ValueError("REPLICATE_API_TOKEN manquant dans secrets.env")
-            
-            self._providers["replicate"] = ReplicateMediaProvider(
-                provider_config,
-                api_token
-            )
-        
-        return self._providers[provider_name]
-    
-    def generate_image(
-        self,
-        prompt: str,
-        output_path: str,
-        input_image: Optional[str] = None,
-        loras: Optional[Dict[str, float]] = None,
-        service_override: Optional[str] = None,
-        **kwargs
-    ) -> bool:
-        """
-        Génère une image.
-        
-        Args:
-            prompt: Le prompt
-            output_path: Chemin de sortie
-            input_image: Image d'entrée (optionnel, active l'édition)
-            loras: Dict des LoRAs
-            service_override: Force un service spécifique
-            **kwargs: Paramètres additionnels
-        """
-        # Déterminer le service
-        if service_override:
-            service_name = service_override
-        elif input_image:
-            service_name = "image_editing"
-        else:
-            service_name = "image_generation"
-        
-        service_config = self.config["media_services"][service_name]
-        provider_name = service_config["provider"]
-        
-        print(f"\n{'='*60}")
-        print(f"🎨 Génération Image - {service_name}")
-        print(f"   Provider: {provider_name}")
-        print(f"   Output: {Path(output_path).name}")
-        print(f"{'='*60}")
-        
-        provider = self._get_provider(provider_name)
-        
-        if provider_name == "comfyui":
-            workflow = service_config["workflow"]
-            return provider["image"].generate(
-                workflow_name=workflow,
-                output_path=output_path,
-                prompt=prompt,
-                input_image=input_image,
-                loras=loras,
-                **kwargs
-            )
-        
-        elif provider_name == "replicate":
-            return provider.generate_image(
-                prompt=prompt,
-                output_path=output_path,
-                input_image=input_image,
-                loras=loras,
-                model_id=service_config.get("model"),
-                **kwargs
-            )
-        
-        raise ValueError(f"Provider inconnu : {provider_name}")
-    
-    def compose_images(
-        self,
-        prompt: str,
-        input_images: List[str],
-        output_path: str,
-        **kwargs
-    ) -> bool:
-        """Compose plusieurs images."""
-        service_config = self.config["media_services"]["image_composition"]
-        provider_name = service_config["provider"]
-        
-        print(f"\n{'='*60}")
-        print(f"🖼️  Composition - {len(input_images)} images")
-        print(f"   Provider: {provider_name}")
-        print(f"{'='*60}")
-        
-        # Pour l'instant, utilise la première image
-        # À adapter selon votre workflow de composition
-        return self.generate_image(
-            prompt=prompt,
-            output_path=output_path,
-            input_image=input_images[0],
-            service_override="image_composition",
-            **kwargs
+    if format_string is None:
+        format_string = (
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
     
-    def generate_video(
-        self,
-        prompt: str,
-        output_path: str,
-        input_image: Optional[str] = None,
-        num_frames: int = 81,
-        continue_video: bool = False,
-        **kwargs
-    ) -> bool:
-        """Génère une vidéo."""
-        service_config = self.config["media_services"]["video_generation"]
-        provider_name = service_config["provider"]
+    # Create formatter
+    formatter = logging.Formatter(format_string)
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    
+    # Configure root logger
+    logger = logging.getLogger("ai_services")
+    logger.setLevel(getattr(logging, level.upper()))
+    logger.addHandler(console_handler)
+    
+    # File handler (optional)
+    if log_file:
+        log_path = Path(log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
         
-        print(f"\n{'='*60}")
-        print(f"🎬 Génération Vidéo - {num_frames} frames")
-        print(f"   Provider: {provider_name}")
-        print(f"   Continue: {continue_video}")
-        print(f"{'='*60}")
-        
-        provider = self._get_provider(provider_name)
-        
-        if provider_name == "comfyui":
-            workflow_path = os.path.join(
-                self.config["providers"]["comfyui"]["base_path"],
-                "workflows",
-                service_config["workflow"]
-            )
-            
-            return provider["video"].generate(
-                workflow_path=workflow_path,
-                prompt=prompt,
-                input_image=input_image,
-                num_frames=num_frames,
-                continue_video=continue_video,
-                **kwargs
-            )
-        
-        elif provider_name == "replicate":
-            # À implémenter selon l'API Replicate vidéo
-            raise NotImplementedError("Vidéo Replicate pas encore implémentée")
-        
-        raise ValueError(f"Provider inconnu : {provider_name}")
+        file_handler = logging.RotatingFileHandler(
+            log_file,
+            maxBytes=10*1024*1024,  # 10MB
+            backupCount=5
+        )
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
 
-# Instance globale
-media = MediaManager()
+def get_logger(name: str) -> logging.Logger:
+    """Get a logger for a specific module."""
+    return logging.getLogger(f"ai_services.{name}")
 ```
 
 ---
 
-## 8. **llm_manager.py** - Gestionnaire LLM
+### **README.md** (Complet)
 
-```python
-"""
-Gestionnaire unifié pour les services LLM (texte et multimodal).
-"""
-import yaml
-from pathlib import Path
-from typing import Optional, Union, List, Dict, Any
-from pydantic import BaseModel
-from providers.utils import load_api_keys
+```markdown
+# 🤖 AI Services Library
 
+> Unified interface for AI services: ComfyUI, Replicate, Local LLMs (DeepSeek, LLaVA)
 
-class LLMManager:
-    """
-    Gestionnaire unique pour les LLM.
-    Support texte simple et multimodal.
-    """
-    
-    def __init__(
-        self,
-        config_path: str = "services/config.yaml",
-        secrets_path: str = "services/secrets.env"
-    ):
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
-        
-        self.api_keys = load_api_keys(secrets_path)
-        self._providers = {}
-    
-    def _get_provider(self, service_name: str):
-        """Charge un provider LLM à la demande."""
-        if service_name in self._providers:
-            return self._providers[service_name]
-        
-        service_config = self.config["llm_services"][service_name]
-        provider_name = service_config["provider"]
-        provider_config = self.config["providers"].get(provider_name, {})
-        
-        if provider_name == "local_deepseek":
-            from providers.local_llm_providers import LocalDeepSeekProvider
-            
-            self._providers[service_name] = LocalDeepSeekProvider(
-                config=provider_config,
-                model_path=service_config["model_path"]
-            )
-        
-        elif provider_name == "local_llava":
-            from providers.local_llm_providers import LocalLLaVAProvider
-            
-            self._providers[service_name] = LocalLLaVAProvider(
-                config=provider_config,
-                model_path=service_config["model_path"],
-                clip_path=service_config["clip_path"]
-            )
-        
-        return self._providers[service_name]
-    
-    def generate_text(
-        self,
-        prompt: Union[str, List[Dict[str, str]]],
-        pydantic_model: Optional[BaseModel] = None,
-        system_prompt: Optional[str] = None,
-        **kwargs
-    ) -> Union[str, BaseModel]:
-        """
-        Génère du texte (synchrone).
-        
-        Args:
-            prompt: Prompt ou liste de messages
-            pydantic_model: Modèle Pydantic pour réponse structurée
-            system_prompt: Prompt système (optionnel)
-            **kwargs: Paramètres additionnels
-        """
-        provider = self._get_provider("text_generation")
-        
-        if system_prompt:
-            provider.set_system_prompt(system_prompt)
-        
-        print(f"\n{'='*60}")
-        print(f"🤖 Génération Texte")
-        print(f"   Structuré: {pydantic_model is not None}")
-        print(f"{'='*60}")
-        
-        return provider.generate_sync(
-            prompt=prompt,
-            pydantic_model=pydantic_model,
-            **kwargs
-        )
-    
-    async def generate_text_async(
-        self,
-        prompt: Union[str, List[Dict[str, str]]],
-        pydantic_model: Optional[BaseModel] = None,
-        system_prompt: Optional[str] = None,
-        **kwargs
-    ) -> Union[str, BaseModel]:
-        """Version asynchrone de generate_text."""
-        provider = self._get_provider("text_generation")
-        
-        if system_prompt:
-            provider.set_system_prompt(system_prompt)
-        
-        return await provider.generate(
-            prompt=prompt,
-            pydantic_model=pydantic_model,
-            **kwargs
-        )
-    
-    def analyze_image(
-        self,
-        prompt: str,
-        image_path: str,
-        system_prompt: Optional[str] = None,
-        **kwargs
-    ) -> str:
-        """
-        Analyse une image avec LLaVA (synchrone).
-        
-        Args:
-            prompt: Question/instruction
-            image_path: Chemin de l'image
-            system_prompt: Prompt système (optionnel)
-            **kwargs: Paramètres additionnels
-        """
-        provider = self._get_provider("multimodal")
-        
-        if system_prompt:
-            provider.provider.system_prompt = system_prompt
-        
-        print(f"\n{'='*60}")
-        print(f"👁️ Analyse Image")
-        print(f"   Image: {Path(image_path).name}")
-        print(f"{'='*60}")
-        
-        return provider.generate_sync(
-            prompt=prompt,
-            image_path=image_path,
-            **kwargs
-        )
-    
-    async def analyze_image_async(
-        self,
-        prompt: str,
-        image_path: str,
-        system_prompt: Optional[str] = None,
-        **kwargs
-    ) -> str:
-        """Version asynchrone de analyze_image."""
-        provider = self._get_provider("multimodal")
-        
-        if system_prompt:
-            provider.provider.system_prompt = system_prompt
-        
-        return await provider.generate(
-            prompt=prompt,
-            image_path=image_path,
-            **kwargs
-        )
-    
-    def clear_history(self, service: str = "text_generation"):
-        """Efface l'historique de conversation."""
-        if service in self._providers:
-            self._providers[service].clear_history()
+[![PyPI version](https://badge.fury.io/py/ai-services-lib.svg)](https://badge.fury.io/py/ai-services-lib)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/votre-nom/ai-services-lib/workflows/tests/badge.svg)](https://github.com/votre-nom/ai-services-lib/actions)
 
+## ✨ Features
 
-# Instance globale
-llm = LLMManager()
+- 🎨 **Image Generation**: Flux, SDXL via ComfyUI or Replicate
+- ✏️ **Image Editing**: Context-aware modifications
+- 🎬 **Video Generation**: Wan Video 2.2
+- 🤖 **Local LLMs**: DeepSeek R1 with structured outputs (Pydantic)
+- 👁️ **Multimodal**: LLaVA for image analysis
+- ⚡ **Unified Interface**: Switch providers with one line
+- 🔄 **Production-Ready**: Automatic retries, logging, error handling
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+pip install ai-services-lib
+
+# With optional dependencies
+pip install ai-services-lib[replicate]  # Replicate support
+pip install ai-services-lib[all]        # Everything
 ```
 
----
-
-## 9. **__init__.py** - Interface Simple
+### Basic Usage
 
 ```python
-"""
-Interface simplifiée pour la bibliothèque de services AI.
-"""
-from .media_manager import media
-from .llm_manager import llm
+from ai_services import media, llm
 
-__all__ = ['media', 'llm']
-
-__version__ = "1.0.0"
-```
-
----
-
-## 🚀 Utilisation Complète
-
-### Exemple 1: Images
-
-```python
-from services import media
-
-# Génération simple
+# Generate an image
 media.generate_image(
-    prompt="A beautiful landscape",
-    output_path="output/landscape.png",
-    loras={"nsfw": 0.5}
+    prompt="A serene Japanese garden",
+    output_path="garden.png"
 )
 
-# Édition (détecte automatiquement grâce à input_image)
-media.generate_image(
-    prompt="Add a sunset",
-    input_image="input/base.png",
-    output_path="output/edited.png"
-)
-
-# Composition
-media.compose_images(
-    prompt="Combine characters",
-    input_images=["char1.png", "char2.png"],
-    output_path="output/composed.png"
-)
-
-# Vidéo
-media.generate_video(
-    prompt="A moving landscape",
-    input_image="input/start.png",
-    output_path="output/video.mp4",
-    num_frames=81
-)
-```
-
-### Exemple 2: LLM Texte
-
-```python
-from services import llm
-from pydantic import BaseModel
-from typing import List
-
-# Texte simple
-response = llm.generate_text("Écris-moi une histoire courte sur un chat.")
+# Generate text
+response = llm.generate_text("Write a haiku about coding")
 print(response)
 
-# Réponse structurée
-class Analysis(BaseModel):
-    summary: str
-    key_points: List[str]
-    sentiment: str
-
-result = llm.generate_text(
-    prompt="Analyse ce texte: 'Les ventes ont augmenté de 15%...'",
-    pydantic_model=Analysis
+# Analyze an image
+analysis = llm.analyze_image(
+    prompt="What's in this image?",
+    image_path="garden.png"
 )
-print(result.summary)
-print(result.key_points)
 ```
 
-### Exemple 3: Multimodal
+### Configuration
 
-```python
-from services import llm
+Create `~/.ai_services/config.yaml`:
 
-# Analyser une image
-description = llm.analyze_image(
-    prompt="Décris cette image en détail",
-    image_path="input/photo.jpg"
-)
-print(description)
+```yaml
+media_services:
+  image_generation:
+    provider: comfyui  # or 'replicate'
+    workflow: flux_cinemat.json
 
-# Analyse technique d'un graphique (votre cas d'usage)
-value = llm.analyze_image(
-    prompt="Quelle est la valeur de εzz lorsque Rs = 0.4?",
-    image_path="input/graph.jpg",
-    system_prompt="Tu es un expert en analyse de graphiques scientifiques."
-)
-print(value)
+llm_services:
+  text_generation:
+    provider: local_deepseek
+    model_path: /path/to/model.gguf
+
+providers:
+  comfyui:
+    base_path: /path/to/ComfyUI/
+    url: http://127.0.0.1:8188
 ```
 
-### Exemple 4: Workflow Complet
+Create `~/.ai_services/secrets.env`:
 
-```python
-from services import media, llm
+```bash
+REPLICATE_API_TOKEN=r8_your_token
+```
 
-# 1. Générer une image
-media.generate_image(
-    prompt="A character in a forest",
-    output_path="output/character.png"
-)
+## 📚 Documentation
 
-# 2. Analyser l'image générée
-description = llm.analyze_image(
-    prompt="Décris ce personnage en détail",
-    image_path="output/character.png"
-)
+- [Full Documentation](https://ai-services-lib.readthedocs.io)
+- [API Reference](https://ai-services-lib.readthedocs.io/api)
+- [Examples](./examples/)
 
-# 3. Générer une vidéo basée sur l'analyse
-media.generate_video(
-    prompt=f"Animate this character: {description}",
-    input_image="output/character.png",
-    output_path="output/animation.mp4"
-)
+## 🔧 Development
+
+```bash
+# Clone the repo
+git clone https://github.com/votre-nom/ai-services-lib.git
+cd ai-services-lib
+
+# Install in dev mode
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Code formatting
+black ai_services tests
+flake8 ai_services tests
+```
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE)
+
+## 🙏 Credits
+
+Built on top of:
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
+- [llama-cpp-python](https://github.com/abetlen/llama-cpp-python)
+- [Instructor](https://github.com/jxnl/instructor)
 ```
 
 ---
 
-## ✨ Points Clés
+### **MANIFEST.in**
 
-✅ **Un seul fichier à modifier** : `config.yaml`  
-✅ **Clés API séparées** : `secrets.env` (gitignored)  
-✅ **Retry automatique** : `tenacity` intégré partout  
-✅ **Lazy loading** : Les modèles ne se chargent que si utilisés  
-✅ **Gestion VRAM** : Nettoyage automatique  
-✅ **Production-ready** : Logging, erreurs, retry  
-✅ **Réutilise votre code** : Wrappers autour de l'existant  
-✅ **Interface unifiée** : `media` et `llm`  
+```
+include README.md
+include LICENSE
+include CHANGELOG.md
+include requirements.txt
+recursive-include ai_services *.yaml *.yml
+recursive-include ai_services py.typed
+recursive-exclude tests *
+recursive-exclude docs *
+```
+
+---
+
+### **.gitignore**
+
+```
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
+ai_services/secrets.env
+test_output/
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+```
+
+---
+
+## 3. ✅ Tests Unitaires Professionnels
+
+### **tests/conftest.py**
+
+```python
+"""
+Pytest configuration and fixtures.
+"""
+import pytest
+from pathlib import Path
+import tempfile
+import shutil
+
+
+@pytest.fixture
+def temp_dir():
+    """Create a temporary directory for tests."""
+    temp_path = Path(tempfile.mkdtemp())
+    yield temp_path
+    shutil.rmtree(temp_path)
+
+
+@pytest.fixture
+def mock_config():
+    """Mock configuration for testing."""
+    return {
+        "media_services": {
+            "image_generation": {
+                "provider": "comfyui",
+                "workflow": "test.json"
+            }
+        },
+        "llm_services": {
+            "text_generation": {
+                "provider": "local_deepseek",
+                "model_path": "/fake/path"
+            }
+        },
+        "providers": {
+            "comfyui": {
+                "base_path": "/fake/comfyui",
+                "url": "http://localhost:8188"
+            }
+        }
+    }
+
+
+@pytest.fixture
+def mock_secrets():
+    """Mock secrets for testing."""
+    return {
+        "REPLICATE_API_TOKEN": "r8_test_token"
+    }
+```
+
+### **tests/test_validators.py**
+
+```python
+"""
+Tests for configuration validators.
+"""
+import pytest
+from ai_services.validators import validate_config, validate_paths
+from ai_services.exceptions import ValidationError
+
+
+def test_validate_config_valid(mock_config):
+    """Test validation passes for valid config."""
+    validate_config(mock_config)  # Should not raise
+
+
+def test_validate_config_missing_section():
+    """Test validation fails for missing section."""
+    with pytest.raises(ValidationError, match="Missing required section"):
+        validate_config({"providers": {}})
+
+
+def test_validate_config_unknown_provider(mock_config):
+    """Test validation fails for unknown provider."""
+    mock_config["media_services"]["image_generation"]["provider"] = "unknown"
+    
+    with pytest.raises(ValidationError, match="Unknown provider"):
+        validate_config(mock_config)
+```
+
+---
+
+## 4. 🔄 CI/CD Pipeline
+
+### **.github/workflows/tests.yml**
+
+```yaml
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+    
+    - name: Lint with flake8
+      run: |
+        flake8 ai_services tests --count --select=E9,F63,F7,F82 --show-source --statistics
+    
+    - name: Type check with mypy
+      run: |
+        mypy ai_services
+    
+    - name: Test with pytest
+      run: |
+        pytest --cov=ai_services --cov-report=xml
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+```
+
+---
+
+## 5. 📋 Récapitulatif des Actions
+
+### ✅ Immédiat (Essentiel)
+
+1. **Créer pyproject.toml** - Configuration moderne
+2. **Créer exceptions.py** - Gestion d'erreurs propre
+3. **Améliorer __init__.py** - Exports propres
+4. **Créer README.md** - Documentation de base
+5. **Créer requirements.txt** - Dépendances claires
+6. **Renommer `services/` → `ai_services/`** - Nom de package valide
+
+### 🔧 Court terme (Important)
+
+7. **Ajouter validators.py** - Validation robuste
+8. **Créer tests unitaires** - Au moins 50% coverage
+9. **Ajouter logging_config.py** - Logs professionnels
+10. **Créer .gitignore** - Éviter les commits inutiles
+11. **Ajouter type hints partout** - `mypy` compliant
+12. **Créer CHANGELOG.md** - Suivi des versions
+
+### 📚 Moyen terme (Polissage)
+
+13. **Documentation Sphinx** - API Reference
+14. **CLI interface** - `ai-services generate-image ...`
+15. **GitHub Actions** - Tests auto
+16. **Exemples avancés** - Notebooks Jupyter
+17. **Publish sur PyPI** - `pip install ai-services-lib`
+
+### 🚀 Long terme (Évolution)
+
+18. **Plugin system** - Providers externes
+19. **Cache intelligent** - Éviter régénérations
+20. **Monitoring** - Prometheus metrics
+21. **Web UI** - Interface Gradio/Streamlit
+22. **Docker images** - Déploiement facile
+
+---
+
+## 6. 🎯 Commandes pour Commencer
+
+```bash
+# 1. Restructurer
+mv services ai_services
+touch ai_services/py.typed  # Pour mypy
+
+# 2. Créer les fichiers essentiels
+cat > pyproject.toml << 'EOF'
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-services-lib"
+version = "0.1.0"
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "tenacity>=8.0",
+]
+EOF
+
+cat > setup.py << 'EOF'
+from setuptools import setup
+setup()
+EOF
+
+# 3. Créer requirements.txt
+cat > requirements.txt << 'EOF'
+pyyaml>=6.0
+pydantic>=2.0
+tenacity>=8.0
+requests>=2.31
+torch>=2.0
+pillow>=10.0
+instructor>=0.5.0
+llama-cpp-python>=0.2.0
+EOF
+
+# 4. Test d'installation
+pip install -e .
+
+# 5. Test d'import
+python -c "from ai_services import media, llm; print('✅ OK')"
+```
+
+---
