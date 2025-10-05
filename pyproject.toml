@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-services-lib"
+version = "0.1.0"
+description = "Unified interface for AI services (ComfyUI, Replicate, Local LLMs)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Jules", email = "jules@example.com"}
+]
+keywords = ["ai", "llm", "comfyui", "stable-diffusion", "replicate"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "tenacity>=8.0",
+    "requests>=2.31",
+    "torch>=2.0",
+    "pillow>=10.0",
+    "instructor>=0.5.0",
+    "llama-cpp-python>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.21",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "sphinx>=7.0",
+]
+
+replicate = [
+    "replicate>=0.20.0",
+]
+
+all = [
+    "ai-services-lib[replicate,dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/votre-nom/ai-services-lib"
+Documentation = "https://ai-services-lib.readthedocs.io"
+Repository = "https://github.com/votre-nom/ai-services-lib"
+Changelog = "https://github.com/votre-nom/ai-services-lib/blob/main/CHANGELOG.md"
+
+[project.scripts]
+ai-services = "ai_services.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ai_services*"]
+
+[tool.setuptools.package-data]
+ai_services = ["config.yaml", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=ai_services --cov-report=html --cov-report=term"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include requirements.txt
+recursive-include ai_services *.yaml *.yml
+recursive-include ai_services py.typed
+recursive-exclude tests *
+recursive-exclude docs *
