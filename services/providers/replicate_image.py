@@ -20,6 +20,9 @@ def get_replicate_key(api_key_path: Path | str) -> str:
     return api_key
 
 
+NEG_PROMPT_GENERIC = "deformed, bad anatomy, disfigured, (poorly draw face:1.4), mutation, mutated, disconnected limb, malformed hands, out of frame, extra limbs, extra legs, extra arms, bad art"
+
+
 class ImageGenerator_replicate:
     NEG_PROMPT = "deformed, bad anatomy, disfigured, (poorly draw face:1.4), mutation, mutated, disconnected limb, malformed hands, ugly, blur, blurry, fake, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, mutation, mutated, extra limbs, extra legs, extra arms, disfigured, deformed, body out of frame, bad art, bad anatomy, ugly, poorly drawn, text, watermark, signature, logo, split image, copyright, desaturated"
 
