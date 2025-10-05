@@ -1,28 +1,27 @@
 """
-Providers LLM locaux (DeepSeek + LLaVA).
-Réutilise votre code existant avec retry production.
+Providers pour les modèles de langage locaux (DeepSeek et LLaVA).
+Ces classes servent de wrappers robustes pour les exécuteurs de modèles,
+en ajoutant des fonctionnalités comme les tentatives (retries).
 """
 from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 import json
 import logging
+import asyncio
 
+from ..config import LocalDeepSeekConfig, LocalLlavaConfig
 
 class LocalDeepSeekProvider:
-    """Wrapper production-ready pour votre LocalDeepSeek_R1_Provider."""
+    """Wrapper de production pour le LocalDeepSeek_R1_Provider."""
 
-    def __init__(self, config: dict, model_path: str):
+    def __init__(self, config: LocalDeepSeekConfig):
         from .utils import clear_vram_if_possible
         clear_vram_if_possible()
 
-        from ai_services.providers.local_deepseek import LocalDeepSeek_R1_Provider
-
-        self.provider = LocalDeepSeek_R1_Provider(
-            model=model_path,
-            system_prompt=config.get("system_prompt")
-        )
-
+        # L'exécuteur sous-jacent est maintenant auto-configuré via les settings globaux
+        from .local_deepseek import LocalDeepSeek_R1_Provider
+        self.provider = LocalDeepSeek_R1_Provider()
         self.config = config
 
     @retry(
@@ -31,32 +30,29 @@ class LocalDeepSeekProvider:
         retry=retry_if_exception_type((ValueError, json.JSONDecodeError)),
         reraise=True
     )
-    async def generate(
+    async def generate_response(
         self,
         prompt: Union[str, List[Dict[str, str]]],
         pydantic_model: Optional[BaseModel] = None,
         **kwargs
     ) -> Union[str, BaseModel]:
-        """Génère une réponse avec retry."""
-        print(f"🤖 DeepSeek R1 - {'Structuré' if pydantic_model else 'Texte'}")
+        """Génère une réponse avec une logique de retry."""
+        print(f"🤖 DeepSeek R1 - Structuré: {pydantic_model is not None}")
 
-        # Merge config avec kwargs
+        # Fusionne la configuration du provider avec les arguments d'appel
         generation_params = {
-            "max_tokens": self.config.get("max_tokens", 8000),
-            "temperature": self.config.get("temperature", 0.6),
+            "max_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
             **kwargs
         }
 
         return await self.provider.generate_response(
-            prompt=prompt,
-            pydantic_model=pydantic_model,
-            **generation_params
+            prompt=prompt, pydantic_model=pydantic_model, **generation_params
         )
 
-    def generate_sync(self, prompt, pydantic_model=None, **kwargs):
-        """Version synchrone."""
-        import asyncio
-        return asyncio.run(self.generate(prompt, pydantic_model, **kwargs))
+    def generate_response_sync(self, prompt, pydantic_model=None, **kwargs):
+        """Wrapper synchrone pour la génération de réponse."""
+        return asyncio.run(self.generate_response(prompt, pydantic_model, **kwargs))
 
     def set_system_prompt(self, system_prompt: str):
         self.provider.set_system_prompt(system_prompt)
@@ -66,20 +62,14 @@ class LocalDeepSeekProvider:
 
 
 class LocalLLaVAProvider:
-    """Wrapper production-ready pour votre LocalMultimodalProvider."""
+    """Wrapper de production pour le LocalMultimodalProvider."""
 
-    def __init__(self, config: dict, model_path: str, clip_path: str):
-        from ai_services.providers.utils import clear_vram_if_possible
+    def __init__(self, config: LocalLlavaConfig):
+        from .utils import clear_vram_if_possible
         clear_vram_if_possible()
 
-        from ai_services.providers.local_deepseek import LocalMultimodalProvider
-
-        self.provider = LocalMultimodalProvider(
-            model=model_path,
-            clip_model_path=clip_path,
-            system_prompt=config.get("system_prompt")
-        )
-
+        from .local_deepseek import LocalMultimodalProvider
+        self.provider = LocalMultimodalProvider()
         self.config = config
 
     @retry(
@@ -87,33 +77,31 @@ class LocalLLaVAProvider:
         stop=stop_after_attempt(3),
         reraise=True
     )
-    async def generate(
+    async def generate_response(
         self,
         prompt: str,
         image_path: Optional[str] = None,
-        stream: bool = False,
         **kwargs
     ) -> str:
-        """Génère une réponse multimodale avec retry."""
-        print(f"👁️ LLaVA - {'Avec image' if image_path else 'Texte seul'}")
+        """Génère une réponse multimodale avec une logique de retry."""
+        print(f"👁️ LLaVA - Image: {image_path is not None}")
 
         generation_params = {
-            "max_tokens": self.config.get("max_tokens", 2048),
-            "temperature": self.config.get("temperature", 0.7),
+            "max_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
             **kwargs
         }
 
         return await self.provider.generate_response(
-            prompt=prompt,
-            image_path=image_path,
-            stream=stream,
-            **generation_params
+            prompt=prompt, image_path=image_path, **generation_params
         )
 
-    def generate_sync(self, prompt, image_path=None, **kwargs):
-        """Version synchrone."""
-        import asyncio
-        return asyncio.run(self.generate(prompt, image_path, **kwargs))
+    def generate_response_sync(self, prompt, image_path=None, **kwargs):
+        """Wrapper synchrone pour la génération de réponse."""
+        return asyncio.run(self.generate_response(prompt, image_path, **kwargs))
+
+    def set_system_prompt(self, system_prompt: str):
+        self.provider.set_system_prompt(system_prompt)
 
     def clear_history(self):
         self.provider.history.clear()

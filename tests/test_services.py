@@ -7,7 +7,10 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List
 
-# Créer les dossiers de sortie
+# Les fixtures dans conftest.py gèrent la configuration et l'environnement.
+# Le sys.path n'a plus besoin d'être modifié.
+
+# Créer les dossiers de sortie pour les artefacts de test
 Path("test_output/images").mkdir(parents=True, exist_ok=True)
 Path("test_output/videos").mkdir(parents=True, exist_ok=True)
 

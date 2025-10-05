@@ -1,23 +1,30 @@
 """
-Wrapper pour Replicate (réutilise votre ImageGenerator_replicate).
+Wrapper pour les services Replicate.
+Cette classe fournit une interface standardisée pour interagir avec l'API
+de Replicate pour la génération d'images et potentiellement d'autres médias.
 """
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 from tenacity import retry, wait_exponential, stop_after_attempt
-
+from .utils import load_api_keys
+from ..config import settings
 
 class ReplicateMediaProvider:
-    """Wrapper pour vos services Replicate existants."""
+    """Wrapper pour les services Replicate."""
 
-    def __init__(self, config: dict, api_token: str):
-        self.config = config
+    def __init__(self):
+        # Accède à la configuration globale via l'objet settings
+        self.config = settings.providers.replicate
+        self.api_token = load_api_keys().get("REPLICATE_API_TOKEN")
+        if not self.api_token:
+            raise ValueError("REPLICATE_API_TOKEN manquant dans le fichier .env ou l'environnement.")
         self._generator = None
-        self.api_token = api_token
 
     @property
     def generator(self):
+        """Charge paresseusement le générateur d'images Replicate."""
         if self._generator is None:
-            # NOTE: This will fail unless the user has this module in their PYTHONPATH
-            from replicate_image import ImageGenerator_replicate
+            # Correction de l'import pour être relatif au package
+            from .replicate_image import ImageGenerator_replicate
             self._generator = ImageGenerator_replicate(
                 api_token=self.api_token,
                 max_workers=10
@@ -38,22 +45,30 @@ class ReplicateMediaProvider:
         loras: Optional[Dict[str, float]] = None,
         **kwargs
     ) -> bool:
-        """Génère une image via Replicate."""
-        print(f"🌐 Replicate - {model_id or 'default model'}")
+        """
+        Génère une image via Replicate en utilisant le modèle spécifié.
+        Si aucun modèle n'est fourni, utilise le modèle par défaut de la configuration.
+        """
+        # Si aucun model_id n'est passé, utiliser le modèle par défaut pour l'image
+        final_model_id = model_id or self.config.default_models.get("image")
+        if not final_model_id:
+            raise ValueError("Aucun modèle Replicate spécifié et aucun modèle par défaut trouvé.")
 
-        if not model_id:
-            model_id = self.config.get("default_models", {}).get("image")
+        print(f"🌐 Replicate - Modèle: {final_model_id}")
 
+        # Le générateur sous-jacent gère la logique d'appel à Replicate
         outputs = self.generator.generate_image(
             prompt=prompt,
             output_file=output_path,
-            model_id=model_id,
+            model_id=final_model_id,
             lora_model=loras,
             **kwargs
         )
 
+        # Retourne True si au moins une image a été générée avec succès
         return len(outputs) > 0
 
     def __del__(self):
+        """S'assure que les ressources sont nettoyées à la destruction de l'objet."""
         if self._generator:
             self._generator.__exit__(None, None, None)

@@ -1,0 +1,10 @@
+{
+  "name": "mock_workflow",
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MockNode",
+      "properties": {}
+    }
+  ]
+}

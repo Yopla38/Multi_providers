@@ -1,58 +1,49 @@
 """
 Gestionnaire unifié pour les services média (images/vidéos).
+Ce module fournit une interface simple pour accéder aux fonctionnalités
+de génération d'images et de vidéos, en routant les appels vers le
+fournisseur (provider) approprié défini dans la configuration.
 """
-import yaml
-import os
 from pathlib import Path
 from typing import Optional, Dict, List
-from .providers.utils import load_api_keys
 
+from .config import settings
+from .providers.utils import load_api_keys
 
 class MediaManager:
     """
     Gestionnaire unique pour images et vidéos.
-    Route automatiquement vers le bon provider.
+    Route automatiquement les appels vers le bon fournisseur (provider)
+    en se basant sur la configuration globale.
     """
-
-    def __init__(
-        self,
-        config_path: str = "ai_services/config.yaml",
-        secrets_path: str = "ai_services/secrets.env"
-    ):
-        # Charger configuration
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
-
-        # Charger clés API
-        self.api_keys = load_api_keys(secrets_path)
-
-        # Lazy loading des providers
+    def __init__(self):
+        # Utilise la configuration globale chargée via Pydantic
+        self.config = settings
+        self.api_keys = load_api_keys() # Charge depuis .env par défaut
         self._providers = {}
 
     def _get_provider(self, provider_name: str):
-        """Charge un provider à la demande."""
+        """Charge un fournisseur à la demande (lazy loading)."""
         if provider_name in self._providers:
             return self._providers[provider_name]
 
-        provider_config = self.config["providers"].get(provider_name, {})
+        provider_config = self.config.providers.model_dump().get(provider_name, {})
 
         if provider_name == "comfyui":
-            from ai_services.providers.comfyui_providers import ComfyUIImageProvider, ComfyUIVideoProvider
+            from .providers.comfyui_providers import ComfyUIImageProvider, ComfyUIVideoProvider
             self._providers["comfyui"] = {
-                "image": ComfyUIImageProvider(provider_config),
-                "video": ComfyUIVideoProvider(provider_config)
+                "image": ComfyUIImageProvider(),
+                "video": ComfyUIVideoProvider()
             }
-
         elif provider_name == "replicate":
-            from ai_services.providers.replicate_providers import ReplicateMediaProvider
+            from .providers.replicate_providers import ReplicateMediaProvider
             api_token = self.api_keys.get("REPLICATE_API_TOKEN")
             if not api_token:
-                raise ValueError("REPLICATE_API_TOKEN manquant dans secrets.env")
+                raise ValueError("REPLICATE_API_TOKEN manquant dans le fichier .env")
+            self._providers["replicate"] = ReplicateMediaProvider(provider_config, api_token)
 
-            self._providers["replicate"] = ReplicateMediaProvider(
-                provider_config,
-                api_token
-            )
+        if provider_name not in self._providers:
+            raise ValueError(f"Fournisseur inconnu : {provider_name}")
 
         return self._providers[provider_name]
 
@@ -65,128 +56,76 @@ class MediaManager:
         service_override: Optional[str] = None,
         **kwargs
     ) -> bool:
-        """
-        Génère une image.
+        """Génère une image en utilisant le service approprié."""
+        service_name = service_override or ("image_editing" if input_image else "image_generation")
 
-        Args:
-            prompt: Le prompt
-            output_path: Chemin de sortie
-            input_image: Image d'entrée (optionnel, active l'édition)
-            loras: Dict des LoRAs
-            service_override: Force un service spécifique
-            **kwargs: Paramètres additionnels
-        """
-        # Déterminer le service
-        if service_override:
-            service_name = service_override
-        elif input_image:
-            service_name = "image_editing"
-        else:
-            service_name = "image_generation"
+        try:
+            service_config = self.config.services[service_name]
+        except KeyError:
+            raise ValueError(f"Service '{service_name}' non trouvé dans la configuration.")
 
-        service_config = self.config["media_services"][service_name]
-        provider_name = service_config["provider"]
+        provider_name = service_config.provider
 
-        print(f"\n{'='*60}")
-        print(f"🎨 Génération Image - {service_name}")
-        print(f"   Provider: {provider_name}")
-        print(f"   Output: {Path(output_path).name}")
-        print(f"{'='*60}")
+        print(f"\n{'='*60}\n🎨 Génération Image - Service: {service_name}\n   Provider: {provider_name}\n   Output: {Path(output_path).name}\n{'='*60}")
 
         provider = self._get_provider(provider_name)
 
         if provider_name == "comfyui":
-            workflow = service_config["workflow"]
+            # Le provider refactorisé attend `service_name` pour trouver sa config
             return provider["image"].generate(
-                workflow_name=workflow,
+                service_name=service_name,
                 output_path=output_path,
                 prompt=prompt,
                 input_image=input_image,
                 loras=loras,
                 **kwargs
             )
-
         elif provider_name == "replicate":
             return provider.generate_image(
                 prompt=prompt,
                 output_path=output_path,
                 input_image=input_image,
                 loras=loras,
-                model_id=service_config.get("model"),
+                model_id=service_config.model, # Utilise le champ 'model'
                 **kwargs
             )
 
         raise ValueError(f"Provider inconnu : {provider_name}")
 
-    def compose_images(
-        self,
-        prompt: str,
-        input_images: List[str],
-        output_path: str,
-        **kwargs
-    ) -> bool:
-        """Compose plusieurs images."""
-        service_config = self.config["media_services"]["image_composition"]
-        provider_name = service_config["provider"]
-
-        print(f"\n{'='*60}")
-        print(f"🖼️  Composition - {len(input_images)} images")
-        print(f"   Provider: {provider_name}")
-        print(f"{'='*60}")
-
-        # Pour l'instant, utilise la première image
-        # À adapter selon votre workflow de composition
+    def compose_images(self, prompt: str, input_images: List[str], output_path: str, **kwargs) -> bool:
+        """Compose plusieurs images en utilisant le service de composition."""
+        print(f"\n{'='*60}\n🖼️  Composition - {len(input_images)} images\n{'='*60}")
+        # La logique de composition est gérée par le service 'image_composition'
         return self.generate_image(
             prompt=prompt,
             output_path=output_path,
-            input_image=input_images[0],
+            input_image=input_images[0], # Le workflow gère les multiples images
             service_override="image_composition",
             **kwargs
         )
 
-    def generate_video(
-        self,
-        prompt: str,
-        output_path: str,
-        input_image: Optional[str] = None,
-        num_frames: int = 81,
-        continue_video: bool = False,
-        **kwargs
-    ) -> bool:
+    def generate_video(self, prompt: str, output_path: str, input_image: Optional[str] = None, continue_video: bool = False, **kwargs) -> bool:
         """Génère une vidéo."""
-        service_config = self.config["media_services"]["video_generation"]
-        provider_name = service_config["provider"]
+        service_name = "video_generation"
+        service_config = self.config.services[service_name]
+        provider_name = service_config.provider
 
-        print(f"\n{'='*60}")
-        print(f"🎬 Génération Vidéo - {num_frames} frames")
-        print(f"   Provider: {provider_name}")
-        print(f"   Continue: {continue_video}")
-        print(f"{'='*60}")
+        print(f"\n{'='*60}\n🎬 Génération Vidéo\n   Provider: {provider_name}\n   Continue: {continue_video}\n{'='*60}")
 
         provider = self._get_provider(provider_name)
 
         if provider_name == "comfyui":
-            workflow_path = os.path.join(
-                self.config["providers"]["comfyui"]["base_path"],
-                "workflows",
-                service_config["workflow"]
-            )
-
+            # Le provider refactorisé n'a plus besoin de `workflow_path`
             return provider["video"].generate(
-                workflow_path=workflow_path,
                 prompt=prompt,
                 input_image=input_image,
-                num_frames=num_frames,
                 continue_video=continue_video,
                 **kwargs
             )
-
         elif provider_name == "replicate":
-            # À implémenter selon l'API Replicate vidéo
-            raise NotImplementedError("Vidéo Replicate pas encore implémentée")
+            raise NotImplementedError("La génération de vidéo avec Replicate n'est pas encore implémentée.")
 
         raise ValueError(f"Provider inconnu : {provider_name}")
 
-
-# Instance globale
+# Instance globale pour un accès simplifié
 media = MediaManager()

@@ -16,7 +16,8 @@ PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 class ServiceConfig(BaseModel):
     """Configuration d'un service (ex: image_generation)."""
     provider: str
-    workflow: Optional[str] = None
+    workflow: Optional[str] = None  # Pour les providers basés sur des workflows (ex: ComfyUI)
+    model: Optional[str] = None     # Pour les providers basés sur des modèles (ex: Replicate)
     node_mapping: Optional[Dict[str, Any]] = None
 
 class ComfyUIConfig(BaseModel):
@@ -27,6 +28,9 @@ class ComfyUIConfig(BaseModel):
     @field_validator('base_path')
     @classmethod
     def resolve_base_path(cls, v):
+        # Si le chemin est relatif, le résoudre par rapport à la racine du projet
+        if not Path(v).is_absolute():
+            return (PROJECT_ROOT / v).resolve()
         return Path(v).resolve()
 
 class ReplicateConfig(BaseModel):
@@ -43,6 +47,8 @@ class LocalDeepSeekConfig(BaseModel):
     @field_validator('model_path')
     @classmethod
     def resolve_model_path(cls, v):
+        if not Path(v).is_absolute():
+            return (PROJECT_ROOT / v).resolve()
         return Path(v).resolve()
 
 class LocalLlavaConfig(BaseModel):
@@ -56,6 +62,8 @@ class LocalLlavaConfig(BaseModel):
     @field_validator('model_path', 'clip_path')
     @classmethod
     def resolve_model_paths(cls, v):
+        if not Path(v).is_absolute():
+            return (PROJECT_ROOT / v).resolve()
         return Path(v).resolve()
 
 class ProvidersConfig(BaseModel):
@@ -113,7 +121,7 @@ class AppConfig(BaseModel):
         """Résout les chemins des workflows relatifs à la racine du projet."""
         workflows_dir = PROJECT_ROOT / 'workflows'
         for service_name, service_config in services.items():
-            if service_config.workflow:
+            if service_config.provider == 'comfyui' and service_config.workflow:
                 workflow_path = workflows_dir / service_config.workflow
                 if not workflow_path.is_file():
                     raise ValueError(f"Workflow file not found for service '{service_name}': {workflow_path}")

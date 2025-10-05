@@ -53,43 +53,38 @@ Harness the power of your own hardware for complete control and privacy.
 
 Leverage a vast library of cloud-based AI models with minimal effort.
 
--   **Image Generation**: Access state-of-the-art image models like SDXL Lightning for near-instantaneous image creation.
--   **Video Generation**: Utilize models like Stable Video Diffusion to generate short video clips from text or image prompts.
--   **Easy Switching**: You can switch from a local ComfyUI workflow to a Replicate model by changing a single line in `config.yaml`, allowing for easy comparison and flexible deployment.
+-   **Image & Video Generation**: Access state-of-the-art models from the Replicate library. You specify the model version directly in the configuration.
+-   **Easy Switching**: You can switch from a local ComfyUI workflow to a Replicate model by changing the `provider` and `model` in `config.yaml`, allowing for easy comparison and flexible deployment.
 
 ## ⚙️ Configuration Example (`config.yaml`)
 
 The `config.yaml` file, located in the `ai_services/` directory, is the heart of the library's configuration.
 
+-   For **ComfyUI** services, use the `workflow` key to specify the JSON file in your `workflows` directory.
+-   For **Replicate** services, use the `model` key to specify the model identifier (e.g., `owner/model:version`).
+
 ```yaml
 # ------------------------------------------------------------------------------
 # 1. ASSIGNATION ET CONFIGURATION DES SERVICES
 # ------------------------------------------------------------------------------
-# Defines the provider, workflow, and node mapping for each service.
-# Workflows are relative to the 'workflows' directory at the project root.
-# ------------------------------------------------------------------------------
 services:
-  image_generation:
+  # --- Service ComfyUI ---
+  image_generation_comfy:
     provider: comfyui
     workflow: "flux_cinemat.json"
     node_mapping:
       prompt_node_id: 6
-      save_node_id: 9
       # ... other nodes
 
-  video_generation:
-    provider: comfyui
-    workflow: "WAN 2.2_loop_complete_api.json"
-    node_mapping:
-      input_image_node_id: 433
-      prompt_node_id: 59
-      # ... other nodes
+  # --- Service Replicate ---
+  image_generation_replicate:
+    provider: replicate
+    model: "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f"
 
+  # --- Services LLM Locaux ---
   text_generation:
     provider: local_deepseek
-
-  multimodal:
-    provider: local_llava
+  # ...
 
 # ------------------------------------------------------------------------------
 # 2. CONFIGURATION DES FOURNISSEURS (PROVIDERS)
@@ -100,20 +95,14 @@ providers:
     url: "http://127.0.0.1:8188"
 
   replicate:
+    # Modèles par défaut si aucun 'model' n'est spécifié dans le service.
     default_models:
       image: "bytedance/sdxl-lightning-4step"
       video: "stability-ai/stable-video-diffusion"
 
   local_deepseek:
     model_path: "/path/to/your/deepseek.gguf"
-    n_ctx: 8192
-    temperature: 0.6
-    max_tokens: 8000
-
-  local_llava:
-    model_path: "/path/to/your/llava.gguf"
-    clip_path: "/path/to/your/llava_clip.gguf"
-    n_ctx: 4096
+    # ... autres paramètres
 ```
 
 ## 📄 License

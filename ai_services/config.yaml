@@ -7,11 +7,13 @@
 # ------------------------------------------------------------------------------
 # 1. ASSIGNATION ET CONFIGURATION DES SERVICES
 # ------------------------------------------------------------------------------
-# Définit le fournisseur, le workflow, et le mapping de noeuds pour chaque service.
-# Les workflows sont relatifs au dossier 'workflows' à la racine du projet.
+# Définit le fournisseur et les paramètres spécifiques pour chaque service.
+# - Pour ComfyUI, spécifiez un `workflow` (relatif au dossier /workflows).
+# - Pour Replicate, spécifiez un `model` (ex: "owner/model_name:version").
 # ------------------------------------------------------------------------------
 services:
-  image_generation:
+  # --- Services ComfyUI ---
+  image_generation_comfy:
     provider: comfyui
     workflow: "flux_cinemat.json"
     node_mapping:
@@ -44,6 +46,12 @@ services:
       steps_node_id: 440
       resolution_node_id: 601
 
+  # --- Service Replicate ---
+  image_generation_replicate:
+    provider: replicate
+    model: "bytedance/sdxl-lightning-4step:5f24084160c9089501c1b3545d9be3c27883ae2239b6f412990e82d4a6210f8f"
+
+  # --- Services LLM Locaux ---
   text_generation:
     provider: local_deepseek
 
@@ -59,6 +67,7 @@ providers:
     url: "http://127.0.0.1:8188"
 
   replicate:
+    # Les modèles par défaut sont utilisés si aucun 'model' n'est spécifié dans le service.
     default_models:
       image: "bytedance/sdxl-lightning-4step"
       video: "stability-ai/stable-video-diffusion"
