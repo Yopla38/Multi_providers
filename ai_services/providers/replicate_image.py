@@ -97,6 +97,9 @@ She stay here""",
         self.swap_model = "omniedgeio/face-swap:c2d783366e8d32e6e82c40682fab6b4c23b9c6eff2692c0cf7585fc16c238cfe"
         self.swap_path = "_swaped_"
 
+        self.flux_kontext_model = "black-forest-labs/flux-kontext-pro"
+        self.flux_kontext_compose_model = "flux-kontext-apps/multi-image-list"
+
     def __enter__(self):
         # Called when the class is instantiated in a 'with' block
         return self
@@ -390,3 +393,50 @@ She stay here""",
                 return img_value
         else:
             return None
+
+    def edit_image_flux_kontext(self, prompt: str, input_image_path: PathLike, output_file: PathLike, output_format: str = "jpg"):
+        output_folder = os.path.dirname(output_file)
+        if output_folder and not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        with open(input_image_path, "rb") as image_file:
+            input_params = {
+                "prompt": prompt,
+                "input_image": image_file,
+                "output_format": output_format,
+            }
+
+            future = self.executor.submit(self.api.run, self.flux_kontext_model, input=input_params)
+            output_url = future.result()
+
+        response = requests.get(output_url)
+        with open(output_file, "wb") as f:
+            f.write(response.content)
+
+        return [output_file]
+
+    def compose_images_flux_kontext(self, prompt: str, input_image_paths: list[PathLike], output_file: PathLike, aspect_ratio: str = "1:1"):
+        output_folder = os.path.dirname(output_file)
+        if output_folder and not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        opened_files = [open(path, "rb") for path in input_image_paths]
+
+        try:
+            input_params = {
+                "prompt": prompt,
+                "input_images": opened_files,
+                "aspect_ratio": aspect_ratio,
+            }
+
+            future = self.executor.submit(self.api.run, self.flux_kontext_compose_model, input=input_params)
+            output_url = future.result()
+        finally:
+            for file in opened_files:
+                file.close()
+
+        response = requests.get(output_url)
+        with open(output_file, "wb") as f:
+            f.write(response.content)
+
+        return [output_file]
