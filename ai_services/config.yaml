@@ -1,49 +1,102 @@
-# Configuration des services média (images/vidéos)
-media_services:
+# ==============================================================================
+# CONFIGURATION CENTRALE
+# ==============================================================================
+# Ce fichier centralise la configuration de l'application AI Services.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. ASSIGNATION ET CONFIGURATION DES SERVICES
+# ------------------------------------------------------------------------------
+# Définit le fournisseur, le workflow, et le mapping de noeuds pour chaque service.
+# Les workflows sont relatifs au dossier 'workflows' à la racine du projet.
+# ------------------------------------------------------------------------------
+services:
   image_generation:
     provider: comfyui
-    workflow: flux_cinemat.json
+    workflow: "flux_cinemat.json"
+    node_mapping:
+      prompt_node_id: 6
+      save_node_id: 9
+      seed_node_id: 25
+      input_image_node_id: null
+      lora_nodes: {}
 
   image_editing:
     provider: comfyui
-    workflow: flux_kontext_master.json
-
-  image_composition:
-    provider: comfyui
-    workflow: flux_kontext_master.json
+    workflow: "flux_kontext_master.json"
+    node_mapping:
+      prompt_node_id: 6
+      save_node_id: 9
+      seed_node_id: 25
+      input_image_node_id: 41
+      lora_nodes:
+        nsfw: 59
+        change_angle: 60
 
   video_generation:
     provider: comfyui
-    workflow: wan_video_22.json
+    workflow: "WAN 2.2_loop_complete_api.json"
+    node_mapping:
+      input_image_node_id: 433
+      prompt_node_id: 59
+      continue_video_node_id: 610
+      num_frames_node_id: 439
+      steps_node_id: 440
+      resolution_node_id: 601
 
-# Configuration des services LLM (texte)
-llm_services:
   text_generation:
     provider: local_deepseek
-    model_path: /home/yopla/montage_models/llm_models/python/models/txt2txt/DeepSeek-R1-Distill-Qwen-14B-Q5_K_S/DeepSeek-R1-Distill-Qwen-14B-Q5_K_S.gguf
 
   multimodal:
     provider: local_llava
-    model_path: /home/yopla/montage_models/llm_models/python/models/multimodal/llava-v1.5-13b-Q6_K.gguf
-    clip_path: /home/yopla/montage_models/llm_models/python/models/multimodal/mmproj-model-f16.gguf
 
-# Configuration des providers
+# ------------------------------------------------------------------------------
+# 2. CONFIGURATION DES FOURNISSEURS (PROVIDERS)
+# ------------------------------------------------------------------------------
 providers:
   comfyui:
-    base_path: /home/yopla/Applications/SD/comfyui/ComfyUI/
-    url: http://127.0.0.1:8188
+    base_path: "/home/yopla/Applications/SD/comfyui/ComfyUI"
+    url: "http://127.0.0.1:8188"
 
   replicate:
     default_models:
-      image: bytedance/sdxl-lightning-4step
-      video: some-video-model
+      image: "bytedance/sdxl-lightning-4step"
+      video: "stability-ai/stable-video-diffusion"
 
   local_deepseek:
+    model_path: "/home/yopla/montage_models/llm_models/python/models/txt2txt/DeepSeek-R1-Distill-Qwen-14B-Q5_K_S/DeepSeek-R1-Distill-Qwen-14B-Q5_K_S.gguf"
     n_ctx: 8192
     temperature: 0.6
     max_tokens: 8000
 
   local_llava:
+    model_path: "/home/yopla/montage_models/llm_models/python/models/multimodal/llava-v1.5-13b-Q6_K.gguf"
+    clip_path: "/home/yopla/montage_models/llm_models/python/models/multimodal/mmproj-model-f16.gguf"
     n_ctx: 4096
     temperature: 0.7
     max_tokens: 2048
+
+# ------------------------------------------------------------------------------
+# 3. CONFIGURATION DU PIPELINE VIDÉO
+# ------------------------------------------------------------------------------
+video_pipeline:
+  output_dir: "output_videos"
+  temp_frames_dir: "temp_frames"
+  temp_video_filename: "TempLoop.mp4"
+  generation:
+    segment_duration: 4
+    timeout: 600
+    file_stable_duration: 10
+    max_segments: 4
+    vram_release_delay: 3
+  coherence_check:
+    enabled: true
+    adjustment_threshold: "acceptable"
+    contradiction_handling_mode: "auto"
+    enable_contradiction_detection: true
+
+# ------------------------------------------------------------------------------
+# 4. VALIDATION
+# ------------------------------------------------------------------------------
+validation:
+  check_ffmpeg: true

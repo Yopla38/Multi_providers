@@ -1,25 +1,24 @@
 """
-Wrappers pour les services ComfyUI existants.
-Réutilise votre code sans modification.
+Wrappers pour les services ComfyUI.
+Ces classes servent d'interface standardisée pour les gestionnaires (managers)
+afin d'interagir avec les exécuteurs ComfyUI.
 """
-import os
 from typing import Optional, Dict
 from tenacity import retry, wait_exponential, stop_after_attempt
 
+# --- Image Provider ---
 
 class ComfyUIImageProvider:
-    """Wrapper pour vos executors ComfyUI existants."""
+    """Wrapper pour l'exécuteur de génération d'images ComfyUI."""
 
-    def __init__(self, config: dict):
-        self.config = config
-        # Import lazy pour éviter de charger si pas utilisé
+    def __init__(self):
         self._executor = None
 
     @property
     def executor(self):
         if self._executor is None:
-            # NOTE: This will fail unless the user has this module in their PYTHONPATH
-            from ai_services.providers.comfy_image_executor import execute_image_workflow
+            # Importation paresseuse de l'exécuteur
+            from .comfy_image_executor import execute_image_workflow
             self._executor = execute_image_workflow
         return self._executor
 
@@ -30,18 +29,18 @@ class ComfyUIImageProvider:
     )
     def generate(
         self,
-        workflow_name: str,
+        service_name: str,  # Modifié: utilise le nom du service
         output_path: str,
         prompt: str,
         input_image: Optional[str] = None,
         loras: Optional[Dict[str, float]] = None,
         **kwargs
     ) -> bool:
-        """Génère une image via ComfyUI."""
-        print(f"🎨 ComfyUI - {workflow_name}")
+        """Génère une image via ComfyUI en utilisant la configuration du service."""
+        print(f"🎨 ComfyUI - Lancement du service d'image : {service_name}")
 
         return self.executor(
-            workflow_name=workflow_name,
+            service_name=service_name,
             final_output_path=output_path,
             prompt=prompt,
             input_image=input_image,
@@ -49,20 +48,20 @@ class ComfyUIImageProvider:
             **kwargs
         )
 
+# --- Video Provider ---
 
 class ComfyUIVideoProvider:
-    """Wrapper pour votre ComfyVideoExecutor."""
+    """Wrapper pour l'exécuteur de génération de vidéos ComfyUI."""
 
-    def __init__(self, config: dict):
-        self.config = config
+    def __init__(self):
         self._executor = None
 
     @property
     def executor(self):
         if self._executor is None:
-            # NOTE: This will fail unless the user has this module in their PYTHONPATH
-            from comfy_executor_video import ComfyVideoExecutor
-            self._executor = ComfyVideoExecutor()
+            # Importation paresseuse de l'exécuteur vidéo
+            from .comfy_executor_video import execute_video_workflow
+            self._executor = execute_video_workflow
         return self._executor
 
     @retry(
@@ -72,21 +71,18 @@ class ComfyUIVideoProvider:
     )
     def generate(
         self,
-        workflow_path: str,
         prompt: str,
         input_image: Optional[str] = None,
-        num_frames: int = 81,
         continue_video: bool = False,
         **kwargs
     ) -> bool:
         """Génère une vidéo via ComfyUI."""
-        print(f"🎬 ComfyUI Video - {num_frames} frames")
+        print(f"🎬 ComfyUI - Lancement du service vidéo")
 
-        return self.executor.execute_workflow(
-            workflow_path=workflow_path,
+        # Le workflow_path n'est plus nécessaire, il est lu depuis la config
+        return self.executor(
             prompt=prompt,
             input_image_path=input_image,
             continue_video=continue_video,
-            num_frames=num_frames,
             **kwargs
         )
