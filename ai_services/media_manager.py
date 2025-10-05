@@ -16,8 +16,8 @@ class MediaManager:
 
     def __init__(
         self,
-        config_path: str = "services/config.yaml",
-        secrets_path: str = "services/secrets.env"
+        config_path: str = "ai_services/config.yaml",
+        secrets_path: str = "ai_services/secrets.env"
     ):
         # Charger configuration
         with open(config_path, 'r') as f:
@@ -37,14 +37,14 @@ class MediaManager:
         provider_config = self.config["providers"].get(provider_name, {})
 
         if provider_name == "comfyui":
-            from services.providers.comfyui_providers import ComfyUIImageProvider, ComfyUIVideoProvider
+            from ai_services.providers.comfyui_providers import ComfyUIImageProvider, ComfyUIVideoProvider
             self._providers["comfyui"] = {
                 "image": ComfyUIImageProvider(provider_config),
                 "video": ComfyUIVideoProvider(provider_config)
             }
 
         elif provider_name == "replicate":
-            from services.providers.replicate_providers import ReplicateMediaProvider
+            from ai_services.providers.replicate_providers import ReplicateMediaProvider
             api_token = self.api_keys.get("REPLICATE_API_TOKEN")
             if not api_token:
                 raise ValueError("REPLICATE_API_TOKEN manquant dans secrets.env")

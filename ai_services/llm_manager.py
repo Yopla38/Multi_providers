@@ -16,8 +16,8 @@ class LLMManager:
 
     def __init__(
         self,
-        config_path: str = "services/config.yaml",
-        secrets_path: str = "services/secrets.env"
+        config_path: str = "ai_services/config.yaml",
+        secrets_path: str = "ai_services/secrets.env"
     ):
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)

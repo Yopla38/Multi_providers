@@ -27,7 +27,7 @@ def test_image_generation():
     """Test de génération d'images."""
     print_section("🎨 TEST 1 : Génération d'Images")
 
-    from services import media
+    from ai_services import media
 
     # Test 1.1: Image simple
     print("📍 Test 1.1: Génération simple")
@@ -66,7 +66,7 @@ def test_image_editing():
     """Test d'édition d'images."""
     print_section("✏️ TEST 2 : Édition d'Images")
 
-    from services import media
+    from ai_services import media
 
     # Vérifier que l'image de test existe
     base_image = "test_output/images/garden.png"
@@ -98,7 +98,7 @@ def test_image_composition():
     """Test de composition d'images."""
     print_section("🖼️ TEST 3 : Composition d'Images")
 
-    from services import media
+    from ai_services import media
 
     # Vérifier que les images sources existent
     images = [
@@ -135,7 +135,7 @@ def test_video_generation():
     """Test de génération de vidéos."""
     print_section("🎬 TEST 4 : Génération de Vidéos")
 
-    from services import media
+    from ai_services import media
 
     # Vérifier que l'image de départ existe
     start_image = "test_output/images/garden.png"
@@ -170,7 +170,7 @@ def test_text_generation():
     """Test de génération de texte simple."""
     print_section("🤖 TEST 5 : Génération de Texte Simple")
 
-    from services import llm
+    from ai_services import llm
 
     # Test 5.1: Réponse simple
     print("📍 Test 5.1: Réponse simple")
@@ -210,7 +210,7 @@ def test_structured_text():
     """Test de génération de texte structuré avec Pydantic."""
     print_section("📊 TEST 6 : Génération de Texte Structuré")
 
-    from services import llm
+    from ai_services import llm
 
     # Définir les modèles Pydantic
     class MovieReview(BaseModel):
@@ -277,7 +277,7 @@ def test_image_analysis():
     """Test d'analyse d'images avec LLaVA."""
     print_section("👁️ TEST 7 : Analyse d'Images (Multimodal)")
 
-    from services import llm
+    from ai_services import llm
 
     # Vérifier que l'image existe
     test_image = "test_output/images/garden.png"
@@ -330,7 +330,7 @@ def test_complete_workflow():
     """Test d'un workflow complet combinant plusieurs services."""
     print_section("🔄 TEST 8 : Workflow Complet")
 
-    from services import media, llm
+    from ai_services import media, llm
 
     # Étape 1: Générer une idée avec le LLM
     print("📍 Étape 1: Génération d'idée créative")
@@ -418,7 +418,7 @@ async def test_async_operations():
     """Test des opérations asynchrones."""
     print_section("⚡ TEST 9 : Opérations Asynchrones")
 
-    from services import llm
+    from ai_services import llm
 
     print("📍 Génération asynchrone simultanée")
 

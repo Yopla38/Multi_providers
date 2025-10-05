@@ -19,7 +19,7 @@ class ComfyUIImageProvider:
     def executor(self):
         if self._executor is None:
             # NOTE: This will fail unless the user has this module in their PYTHONPATH
-            from comfy_image_executor import execute_image_workflow
+            from ai_services.providers.comfy_image_executor import execute_image_workflow
             self._executor = execute_image_workflow
         return self._executor
 
